@@ -44,20 +44,21 @@ def run_load(dataframe, table_name="daily_air_quality"):
         f"/{db_config['DB_NAME']}"
     )
 
+    engine = None
     try:
         # create database engine
         engine = create_engine(connection_string)
-        
+
         # insert dataframe into postgres
         dataframe.to_sql(name=table_name, con=engine, if_exists='append', index=False)
-        
+
         logger.info(f"Sukses! {len(dataframe)} baris data polusi berhasil disimpan ke tabel '{table_name}' di PostgreSQL.")
-        
+
     except Exception as e:
         logger.error(f"Terjadi error saat loading data ke PostgreSQL: {e}")
         raise
-        
+
     finally:
-        # dispose database connection and close all connections in the pool
-        engine.dispose()
-        logger.info("Database connection disposed successfully.")
+        if engine is not None:
+            engine.dispose()
+            logger.info("Database connection disposed successfully.")

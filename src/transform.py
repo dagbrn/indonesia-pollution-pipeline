@@ -1,6 +1,9 @@
 import pandas as pd
 from datetime import datetime
+from zoneinfo import ZoneInfo
 import logging
+
+_TZ_JAKARTA = ZoneInfo('Asia/Jakarta')
 
 logger = logging.getLogger(__name__)
 
@@ -65,7 +68,7 @@ def run_transformation(data) -> pd.DataFrame:
                 cleaned_name = raw_name.title()
             
             # transform unix time to local format (YYYY-MM-DD HH:MM:SS)
-            readable_time = datetime.fromtimestamp(unix_timestamp).strftime('%Y-%m-%d %H:%M:%S')
+            readable_time = datetime.fromtimestamp(unix_timestamp, tz=_TZ_JAKARTA).strftime('%Y-%m-%d %H:%M:%S')
             
             # merge into one flat data structure
             row = {

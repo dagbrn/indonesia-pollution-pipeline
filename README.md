@@ -1,4 +1,4 @@
-# INDONESIA AIR POLLUTION DATA PIPELINE 
+# INDONESIA AIR POLLUTION DATA PIPELINE
 
 **ETL (Extract, Transform, Load) pipeline** that collects real-time air quality data from OpenWeather API, transforms it, and loads it into PostgreSQL database.
 
@@ -11,6 +11,7 @@ This project demonstrates data engineering practices including:
 - Environment-based configuration management
 - Comprehensive logging and monitoring
 - Type hints and proper code structure
+- Containerized deployment with Docker
 
 ## Features
 
@@ -29,7 +30,7 @@ This project demonstrates data engineering practices including:
 
 ### Data Processing
 - **Extract**: Fetch data from OpenWeather API with rate limiting
-- **Transform**: Clean data, normalize timestamps, classify region types (Kota/Kabupaten)
+- **Transform**: Clean data, normalize timestamps to WIB (UTC+7), classify region types (Kota/Kabupaten)
 - **Load**: Store processed data in PostgreSQL
 
 ## Architecture
@@ -45,7 +46,7 @@ Transform Phase (transform.py)
 ├─ Validate data structure
 ├─ Extract AQI components
 ├─ Clean region names (Kabupaten/Kota)
-├─ Normalize Unix timestamps
+├─ Normalize Unix timestamps to WIB (Asia/Jakarta)
 └─ Return: Pandas DataFrame
          ↓
 Load Phase (load.py)
@@ -65,13 +66,13 @@ Load Phase (load.py)
 | **Database** | PostgreSQL + SQLAlchemy |
 | **Configuration** | Python-dotenv |
 | **Logging** | Python logging |
+| **Containerization** | Docker + Docker Compose |
 
 ## Setup & Installation
 
 ### Prerequisites
-- Python 3+
-- PostgreSQL database
-- OpenWeather API key (free tier available)
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/)
+- OpenWeather API key ([free tier available](https://openweathermap.org/api))
 
 ### 1. Clone Repository
 ```bash
@@ -79,72 +80,72 @@ git clone https://github.com/yourusername/air-pollution-pipeline.git
 cd air-pollution-pipeline
 ```
 
-### 2. Create Virtual Environment
-```bash
-python -m venv venv
-On Linux / macOS: 'source venv/bin/activate'  # On Windows: 'venv\Scripts\activate'
-```
-
-### 3. Install Dependencies
-```bash
-pip install -r requirements.txt
-```
-
-### 4. Configure Environment Variables
-Copy `.env.example` to `.env` and update with your credentials:
+### 2. Configure Environment Variables
+Copy `.env.example` to `.env` and fill in your credentials:
 ```bash
 cp .env.example .env
 ```
 
-Then edit `.env` with your configuration:
 ```env
-# OpenWeather API Configuration
+# OpenWeather API
 OPENWEATHER_API_KEY=your_api_key_here
 OPENWEATHER_BASE_URL=http://api.openweathermap.org/data/2.5/air_pollution
 
-# Database Configuration
-DB_HOST=localhost
+# Database — these values are used by both the app and the PostgreSQL container
 DB_USER=postgres
 DB_PASSWORD=your_password_here
-DB_NAME=air_pollution
+DB_HOST=localhost
 DB_PORT=5432
+DB_NAME=air_pollution
 ```
 
-### 5. Create PostgreSQL Database
-Create the database using PostgreSQL `createdb` utility:
+### 3. Run Pipeline
 ```bash
-createdb -U postgres air_pollution
+docker compose up --build
 ```
 
-Or using `psql`:
+Docker Compose will:
+1. Start a PostgreSQL container and wait until it is healthy
+2. Build the pipeline image and run it against the database
+3. Exit automatically once the pipeline completes
+
+### 4. Verify Data
 ```bash
-psql -U postgres -c "CREATE DATABASE air_pollution;"
+docker compose exec db psql -U postgres -d air_pollution
+```
+```sql
+SELECT COUNT(*) FROM daily_air_quality;
+SELECT * FROM daily_air_quality LIMIT 5;
 ```
 
-### 6. Run Pipeline
+### 5. Cleanup
 ```bash
-python src/main.py
+docker compose down        # stop containers, keep data
+docker compose down -v     # stop containers and delete all data
 ```
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 air-pollution-pipeline/
 ├── src/
-│   ├── main.py           # Main orchestration
-│   ├── extract.py        # Data extraction from API
-│   ├── transform.py      # Data transformation & cleaning
-│   └── load.py          # Data loading to PostgreSQL
+│   ├── main.py                    # Pipeline orchestration
+│   ├── extract.py                 # Data extraction from API
+│   ├── transform.py               # Data transformation & cleaning
+│   └── load.py                    # Data loading to PostgreSQL
 ├── settings/
-│   └── path.py          # Path configuration
+│   └── path.py                    # Path configuration
 ├── data/
-│   └── lat_long_kota_kab.csv  # City/Regency coordinates dataset
-├── .env                 # Environment variables
-├── .gitignore          # Git ignore rules
-├── requirements.txt    # Python dependencies
-└── README.md          # This file
+│   └── lat_long_kota_kab.csv      # City/regency coordinates dataset
+├── .dockerignore                  # Files excluded from Docker image
+├── .env.example                   # Environment variable template
+├── .gitignore                     # Git ignore rules
+├── compose.yaml                   # Docker Compose configuration
+├── Dockerfile                     # Docker image definition
+├── requirements.txt               # Python dependencies
+└── README.md                      # This file
 ```
 
 ---
 
-**⭐ If you find this helpful, please consider starring the repository!**
+**If you find this helpful, please consider starring ⭐ the repository!**
