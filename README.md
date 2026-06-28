@@ -33,6 +33,19 @@ This project demonstrates data engineering practices including:
 - **Transform**: Clean data, normalize timestamps to WIB (UTC+7), classify region types (Kota/Kabupaten)
 - **Load**: Store processed data in PostgreSQL
 
+## Dashboard Visualization
+
+The processed snapshot data from PostgreSQL (representing the latest air quality state per region) is integrated into a Power BI Dashboard for geographical and criteria-based analysis.
+
+### Key Interactive Features:
+- **Dynamic Pollutant Slicer**: Instantly switch visual graphs between `PM2.5`, `PM10`, `NO₂`, `SO₂`, and `O₃` metrics.
+- **Top 10 Most Polluted Regions**: Dynamically filters and displays the highest pollution levels across monitored cities/regencies based on the active slicer selection.
+- **Semantic KPI Cards**: Live metrics showing the overall national average status and peak pollution areas with qualitative indicators (e.g., *GOOD*, *Very Poor*).
+
+### Demo Preview
+
+![Indonesia Air Quality Dashboard Demo](assets/dashboard-demo.gif)
+
 ## Architecture
 
 ```
@@ -67,6 +80,7 @@ Load Phase (load.py)
 | **Configuration** | Python-dotenv |
 | **Logging** | Python logging |
 | **Containerization** | Docker + Docker Compose |
+| **Visualization** | Power BI |
 
 ## Setup & Installation
 
